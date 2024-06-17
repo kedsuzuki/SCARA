@@ -1,6 +1,6 @@
 '''
 @file: lead_screw_calculations.py
-@updated: 2024/06/09
+@updated: 2024/06/17
 @brief: Computes max raising and lowering torque for a lead screw assembly
 @resource:  https://www.youtube.com/watch?v=BstZUC4tcOA
             https://www.youtube.com/watch?v=oAxYvoVXDrI&list=TLPQMTAwNjIwMjTrMRsCZJhThA&index=6 
@@ -21,17 +21,17 @@ l               = starts*pitch          # lead i.e., axial travel for one rotati
 d_maj           = 8                     # major diameter [mm]
 d_root          = 6.7                   # root diameter [mm]
 d_m             = d_maj - 2*(d_root/4)  # mean diameter of lead screw [mm] 
-alpha           = 15                    # lead angle of thread (metric trap ~ 30/2) [deg]
+alpha           = math.radians(15)      # lead angle of thread (metric trap ~ 30/2) [rad]
 f               = 0.19                  # avg coefficient of friction for steel screw and brass nut (0.15-0.23) **if dry, f=0.5
 g               = 9.81                  # acceleration due to gravity [m/s^2]
-T_nemaMax       = 2.35/9.81              # holding torque for a NEMA17-13 stepper motor (4.2 kg-m) [N-m]
-rpm_nemaMax     = 1_000                # screw shaft revolution frequency per minute (rpm)
+T_nemaMax       = 235                 # holding torque for a NEMA17-13 stepper motor [N-mm]
+rpm_nemaMax     = 1_000                 # screw shaft revolution frequency per minute (rpm)
 m_plat          = 20                    # mass of SCARA supported by lead screw platform [kg]
 F_g             = m_plat*g              # force load on lead screw [N]
 
 # max force that can be lifted or lowered given NEMA max torque
-F_R = (2*T_nemaMax/d_m) * ((math.pi*d_m - f*l*(1/math.cos(alpha))) / (l + math.pi*f*d_m*(1/math.cos(alpha)))) * math.pow(10, 3)
-F_L = (2*T_nemaMax/d_m) * ((math.pi*d_m + f*l*(1/math.cos(alpha))) / (f*math.pi*d_m*(1/math.cos(alpha)) - l)) * math.pow(10, 3)
+F_R = (2*T_nemaMax/d_m) * ((math.pi*d_m - f*l*(1/math.cos(alpha))) / (l + math.pi*f*d_m*(1/math.cos(alpha)))) 
+F_L = (2*T_nemaMax/d_m) * ((math.pi*d_m + f*l*(1/math.cos(alpha))) / (f*math.pi*d_m*(1/math.cos(alpha)) - l)) 
 print(f'mass_R: {F_R/g:.3f} kg')
 print(f'mass_L: {F_L/g:.3f} kg\n')
 
