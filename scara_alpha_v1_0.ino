@@ -40,7 +40,7 @@ int top_lim_step, bottom_lim_step, left_lim_step, right_lim_step;
 AccelStepper BaseStepper(AccelStepper::DRIVER, BASE_STEP_PIN, BASER_DIR_PIN);
 AccelStepper ZStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
 AccelStepper ElbowStepper(AccelStepper::DRIVER, ELBOW_STEP_PIN, ELBOW_DIR_PIN);
-Servo GripperServo();
+Servo GripperServo;
 
 //func protos
 void calibrateLimits();
