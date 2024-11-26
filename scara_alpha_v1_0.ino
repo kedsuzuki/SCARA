@@ -1,10 +1,9 @@
 /*
 @file: scara_alpha_v1_0.ino
-@updated: 2024/11/24
+@updated: 2024/11/25
 @author: Kensei Suzuki & Diego Gomez
 @brief: Alpha version meant for development. Top level main code for controlling the SCARA robot. 
 */
-
 
 /*
  * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -41,11 +40,20 @@ int top_lim_step, bottom_lim_step, left_lim_step, right_lim_step;
 AccelStepper BaseStepper(AccelStepper::DRIVER, BASE_STEP_PIN, BASER_DIR_PIN);
 AccelStepper ZStepper(AccelStepper::DRIVER, Z_STEP_PIN, Z_DIR_PIN);
 AccelStepper ElbowStepper(AccelStepper::DRIVER, ELBOW_STEP_PIN, ELBOW_DIR_PIN);
+Servo GripperServo();
 
 //func protos
 void calibrateLimits();
 void zeroHome();
-void requestOpMode();
+int getManualInput_Base();
+int getManualInput_ZAxis();
+int getManualInput_Elbow();
+int calculateBaseStep(int);
+int calculateZStep(int);
+int calculateElbowStep(int);
+void moveAxis_Base(int);
+void moveAxis_ZAxis(int);
+void moveAxis_Elbow(int);
 
 /*
  * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -54,22 +62,22 @@ void requestOpMode();
 */
 void setup(){
     //init comms
-    Serial.begin(115200);
+    Serial.begin(9600);
     while(!Serial){}
 
     //init limit switches
-    pinMode(TOP_LIMIT_PIN, INPUT); //make input pulldown to set default to LOW?
-    pinMode(BOTTOM_POT_PIN, INPUT);
-    pinMode(RIGHT_POT_PIN, INPUT);
-    pinMode(LEFT_POT_PIN, INPUT);
+    pinMode(TOP_LIMIT_PIN, INPUT);
+    pinMode(BOTTOM_LIMIT_PIN, INPUT);
+    pinMode(RIGHT_LIMIT_PIN, INPUT);
+    pinMode(LEFT_LIMIT_PIN, INPUT);
 
     //setup stepper motors
     BaseStepper.setMaxSpeed(NEMA17_MAX_SPEED);
     BaseStepper.setAcceleration(NEMA17_MAX_ACCEL);
-    ZStepper.setSpeed(200);
     ZStepper.setMaxSpeed(NEMA17_MAX_SPEED);
+    ZStepper.setAcceleration(NEMA17_MAX_ACCEL);
     ElbowStepper.setAcceleration(NEMA17_MAX_ACCEL);
-    ElbowStepper.setSpeed(200);
+    ElbowStepper.setMaxSpeed(NEMA17_MAX_SPEED);
 
     delay(250);
 } //end of setup()
@@ -81,21 +89,23 @@ void setup(){
 */
 void loop(){
     //get user input for each joint 
-    int base_position = getManualInput();
-    int z_position = getManualInput();
-    int elbow_position = getManualInput();
+    int base_position = getManualInput_Base();
+    int z_position = getManualInput_ZAxis();
+    int elbow_position = getManualInput_Elbow();
 
+    //convert user input into step positions for motors
     int b_step = calculateBaseStep(base_position);
     int z_step = calculateZStep(z_position);
     int e_step = calculateElbowStep(elbow_position);
 
-    moveAxis(&BaseStepper, b_step);
-    moveAxis(&ZStepper, z_step);
-    moveAxis(&ElbowStepper, e_step);
+    //run motors to step positions
+    moveAxis_Base(b_step);
+    moveAxis_ZAxis(z_step);
+    moveAxis_Elbow(e_step);
 
-    delay(500);
-
+    delay(100);
 } //end of loop()
+
 
 /*
  * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -149,11 +159,80 @@ void zeroHome(){
   // and the position to be moved to
 // }
 
-int getManualInput(){
+int getManualInput_Base(){
   Serial.println("Enter position to move to: ");
 
   while( Serial.available() == 0 ){}
+  int InputAngle = Serial.parseInt()
 
-  return Serial.parseFloat();
+  if InputAngle > 360 || InputAngle < 0 {
+    Serial.println("Please input a number between 0 and 360");
+  }
 
+  else {
+    return InputAngle;
+  }
+}
+
+int getManualInput_ZAxis(){
+  Serial.println("Enter position to move to: ");
+
+  while( Serial.available() == 0 ){}
+  int InputAngle = Serial.parseInt()
+
+  if InputAngle > 387 || InputAngle < 192 {
+    Serial.println("Please input a number between 192 and 387");
+  }
+
+  else {
+    return InputAngle;
+  }
+}
+
+int getManualInput_Elbow(){
+  Serial.println("Enter position to move to: ");
+
+  while( Serial.available() == 0 ){}
+  int InputAngle = Serial.parseInt()
+
+  if abs(InputAngle) > 148 {
+    Serial.println("Please input a number between 0 and 148");
+  }
+
+  else {
+    return InputAngle;
+  }
+}
+
+int calculateBaseStep(int pos){
+  //computes the step required for the base motor to run to achieve user input position angle
+  
+  return 0;
+}
+
+int calculateZStep(int pos){
+  //computes the step the Z-axis motor must run to in order to achieve user input position height
+  int stp = map(pos, 192, 387, left_lim_step, right_lim_step);
+  return stp
+}
+
+int calculateElbowStep(int pos){
+  //computes the step required for the elbow motor to run to the user input position angle
+  int stp = map(pos, -148, 148, bottom_lim_step, top_lim_step);
+  return stp
+}
+
+moveAxis_Base(int step){
+  BaseStepper.moveTo(step);
+  BaseStepper.run();
+}
+
+moveAxis_ZAxis(int step){
+  ZStepper.moveTo(step);
+  ZStepper.run();
+}
+
+moveAxis_Elbow(int step){
+  ElbowStepper.moveTo(step);
+  ElbowStepper.run();
 }
