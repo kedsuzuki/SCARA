@@ -21,17 +21,17 @@
 #define RAD_TO_DEG              180.0/PI  //radian to degree conversion (180/pi=57.296)
 
 // pins
-const int BASE_DIR_PIN        = 2;        //nema stepper motors control pins
-const int BASE_STEP_PIN       = 3;
-const int Z_DIR_PIN           = 4;
-const int Z_STEP_PIN          = 5;
-const int ELBOW_DIR_PIN       = 4;
-const int ELBOW_STEP_PIN      = 5;
-const int TOP_LIMIT_PIN       = 6;        //limit switch 
-const int BOTTOM_LIMIT_PIN    = 7;
-const int LEFT_LIMIT_PIN      = 8;
-const int RIGHT_LIMIT_PIN     = 9;
-const int GRIPPER_PIN         = 11;       //gripper servo motor PWM pin
+const int BASE_DIR_PIN        = 12;        //nema stepper motors control pins
+const int BASE_STEP_PIN       = 13;
+const int Z_DIR_PIN           = 8;
+const int Z_STEP_PIN          = 9;
+const int ELBOW_DIR_PIN       = 10;
+const int ELBOW_STEP_PIN      = 11;
+const int TOP_LIMIT_PIN       = 4;        //limit switch 
+const int BOTTOM_LIMIT_PIN    = 3;
+const int LEFT_LIMIT_PIN      = 5;
+const int RIGHT_LIMIT_PIN     = 6;
+const int GRIPPER_PIN         = 7;       //gripper servo motor PWM pin
 
 // globals
 int top_lim_step, bottom_lim_step, left_lim_step, right_lim_step;
@@ -66,10 +66,10 @@ void setup(){
     while(!Serial){}
 
     //init limit switches
-    pinMode(TOP_LIMIT_PIN, INPUT);
-    pinMode(BOTTOM_LIMIT_PIN, INPUT);
-    pinMode(RIGHT_LIMIT_PIN, INPUT);
-    pinMode(LEFT_LIMIT_PIN, INPUT);
+    pinMode(TOP_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(BOTTOM_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(RIGHT_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(LEFT_LIMIT_PIN, INPUT_PULLUP);
 
     //setup stepper motors
     BaseStepper.setMaxSpeed(NEMA17_MAX_SPEED);
@@ -116,7 +116,7 @@ void loop(){
 void calibrateLimits(){
   //top
   while(1){
-    digitalRead(TOP_LIMIT_PIN) == LOW ? break : void()0
+    digitalRead(TOP_LIMIT_PIN) == HIGH ? break : void()0
     ZStepper.setSpeed(NEMA17_MAX_SPEED / SPEED_REDUCTION);
     ZStepper.runSpeed();
   }
@@ -124,7 +124,7 @@ void calibrateLimits(){
 
   //bottom
   while(1){
-    digitalRead(BOTTOM_LIMIT_PIN) == LOW ? break : void()0
+    digitalRead(BOTTOM_LIMIT_PIN) == HIGH ? break : void()0
     ZStepper.setSpeed(NEMA17_MAX_SPEED / 10);
     ZStepper.runSpeed();
   }
@@ -132,7 +132,7 @@ void calibrateLimits(){
   
   //left
   while(1){
-    digitalRead(LEFT_LIMIT_PIN) == LOW ? break : void()0
+    digitalRead(LEFT_LIMIT_PIN) == HIGH ? break : void()0
     ElbowStepper.setSpeed(NEMA17_MAX_SPEED / 10);
     ElbowStepper.runSpeed();
   }
@@ -140,7 +140,7 @@ void calibrateLimits(){
   
   //right
   while(1){
-    digitalRead(RIGHT_LIMIT_PIN) == LOW ? break : void()0
+    digitalRead(RIGHT_LIMIT_PIN) == HIGH ? break : void()0
     ElbowStepper.setSpeed(NEMA17_MAX_SPEED / 10);
     ElbowStepper.runSpeed();
   }

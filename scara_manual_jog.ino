@@ -14,28 +14,28 @@
 #include <Servo.h>
 #include <math.h>
 
-#define JOG_BASE 1
+#define JOG_BASE 0
 #define JOG_ZAXIS 0
 #define JOG_ELBOW 0 
-#define ACTUATE_GRIPPER 0
+#define ACTUATE_GRIPPER 1
 
 #define NEMA17_MAX_SPEED        500.0     //steps per second
 #define NEMA17_MAX_ACCEL        50.0      //steps per second^2
 #define NEMA17_STEPS_PER_REV    200       //steps per one output revolution
-#define SPEED_REDUCTION         5         //reduce nema speed by this factor
+#define SPEED_REDUCTION         10         //reduce nema speed by this factor
 
 // pins
-const int BASE_DIR_PIN        = 2;        //nema stepper motors control pins
-const int BASE_STEP_PIN       = 3;
-const int Z_DIR_PIN           = 4;
-const int Z_STEP_PIN          = 5;
-const int ELBOW_DIR_PIN       = 4;
-const int ELBOW_STEP_PIN      = 5;
-const int TOP_LIMIT_PIN       = 6;        //limit switch 
-const int BOTTOM_LIMIT_PIN    = 7;
-const int LEFT_LIMIT_PIN      = 8;
-const int RIGHT_LIMIT_PIN     = 9;
-const int GRIPPER_PIN         = 11;       //gripper servo motor PWM pin
+const int BASE_DIR_PIN        = 12;        //nema stepper motors control pins
+const int BASE_STEP_PIN       = 13;
+const int Z_DIR_PIN           = 8;
+const int Z_STEP_PIN          = 9;
+const int ELBOW_DIR_PIN       = 10;
+const int ELBOW_STEP_PIN      = 11;
+const int TOP_LIMIT_PIN       = 4;        //limit switch 
+const int BOTTOM_LIMIT_PIN    = 3;
+const int LEFT_LIMIT_PIN      = 5;
+const int RIGHT_LIMIT_PIN     = 6;
+const int GRIPPER_PIN         = 7;       //gripper servo motor PWM pin
 
 // globals
 int top_lim_step, bottom_lim_step, left_lim_step, right_lim_step;
@@ -60,10 +60,10 @@ void setup(){
     while(!Serial){}
 
     //init limit switches
-    pinMode(TOP_LIMIT_PIN, INPUT);
-    pinMode(BOTTOM_LIMIT_PIN, INPUT);
-    pinMode(RIGHT_LIMIT_PIN, INPUT);
-    pinMode(LEFT_LIMIT_PIN, INPUT);
+    pinMode(TOP_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(BOTTOM_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(RIGHT_LIMIT_PIN, INPUT_PULLUP);
+    pinMode(LEFT_LIMIT_PIN, INPUT_PULLUP);
 
     //setup stepper motors
     BaseStepper.setMaxSpeed(NEMA17_MAX_SPEED);
@@ -86,11 +86,13 @@ void setup(){
 */
 void loop(){
     #if JOG_BASE
-    if( digitalRead(BOTTOM_LIMIT_PIN)==LOW ){
-        BaseStepper.setSpeed(-1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
-    }    
-    else if( digitalRead(TOP_LIMIT_PIN)==LOW ){
+    if( digitalRead(BOTTOM_LIMIT_PIN)==HIGH ){
         BaseStepper.setSpeed(1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
+        //cw looking down (-)
+    }    
+    else if( digitalRead(TOP_LIMIT_PIN)==HIGH ){
+        BaseStepper.setSpeed(-1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
+        //ccw looking down (+)
     }
     else{
         BaseStepper.setSpeed(0);
@@ -98,11 +100,11 @@ void loop(){
     BaseStepper.runSpeed();
     #endif
 
-    #if JOG_ZAxis
-    if( digitalRead(BOTTOM_LIMIT_PIN)==LOW ){
+    #if JOG_ZAXIS
+    if( digitalRead(BOTTOM_LIMIT_PIN)==HIGH ){
         ZStepper.setSpeed(-1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
     }    
-    else if( digitalRead(TOP_LIMIT_PIN)==LOW ){
+    else if( digitalRead(TOP_LIMIT_PIN)==HIGH ){
         ZStepper.setSpeed(1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
     }
     else{
@@ -112,10 +114,11 @@ void loop(){
     #endif
 
     #if JOG_ELBOW
-    if( digitalRead(LEFT_LIMIT_PIN)==LOW ){
+    //speed reduction 10
+    if( digitalRead(LEFT_LIMIT_PIN)==HIGH ){
         ElbowStepper.setSpeed(-1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
     }    
-    else if( digitalRead(RIGHT_LIMIT_PIN)==LOW ){
+    else if( digitalRead(RIGHT_LIMIT_PIN)==HIGH ){
         ElbowStepper.setSpeed(1 * NEMA17_MAX_SPEED / SPEED_REDUCTION);
     }
     else{
@@ -126,15 +129,16 @@ void loop(){
 
     #if ACTUATE_GRIPPER
     int pos = GripperServo.read();
-    if( digitalRead(LEFT_LIMIT_PIN)==LOW ){
-        pos--;
+    Serial.println(pos);
+    if( digitalRead(LEFT_LIMIT_PIN)==HIGH ){
+        pos -= 1;
         GripperServo.write(pos);
-        delay(10);
+        delay(100);
     }
-    else if( digitalRead(RIGHT_LIMIT_PIN)==LOW){
-        pos++;
+    else if( digitalRead(RIGHT_LIMIT_PIN)==HIGH){
+        pos += 1;
         GripperServo.write(pos);
-        delay(10);
+        delay(100);
         }
     #endif
 
