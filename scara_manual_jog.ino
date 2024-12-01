@@ -1,6 +1,6 @@
 /*
 @file: scara_alpha_v1_0.ino
-@updated: 2024/11/25
+@updated: 2024/11/30
 @author: Kensei Suzuki & Diego Gomez
 @brief: Alpha version meant for development. Top level main code for controlling the SCARA robot. 
 */
