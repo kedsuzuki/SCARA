@@ -14,10 +14,10 @@
 #include <Servo.h>
 #include <math.h>
 
-#define JOG_BASE 0
-#define JOG_ZAXIS 0
-#define JOG_ELBOW 0 
-#define ACTUATE_GRIPPER 1
+#define JOG_BASE            1
+#define JOG_ZAXIS           0
+#define JOG_ELBOW           0 
+#define ACTUATE_GRIPPER     0
 
 #define NEMA17_MAX_SPEED        500.0     //steps per second
 #define NEMA17_MAX_ACCEL        50.0      //steps per second^2
@@ -78,6 +78,7 @@ void setup(){
 
     delay(250);
 } //end of setup()
+
 
 /*
  * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
