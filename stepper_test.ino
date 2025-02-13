@@ -11,13 +11,6 @@
     https://github.com/waspinator/AccelStepper 
 */
 
-
-/*
- * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- *  LIBRARIES | GLOBALS | OBJECTS | FUNCTION PROTOTYPES
- * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*/
-
 #define POSITION_CTRL           1
 #define SPEED_CTRL              0
 
@@ -26,19 +19,14 @@
 #define NEMA17_MAX_SPEED        500.0     //steps per second
 #define NEMA17_MAX_ACCEL        50.0      //steps per second^2
 #define NEMA17_STEPS_PER_REV    200       //steps per one output revolution
-#define SPIN_DIRECTION          1         //1 or -1 for CW or CCW
 
 const int DIR_PIN               = 7;        //nema stepper motors control pins
 const int STEP_PIN              = 8;
 
+int spin_dir = 1;
+
 AccelStepper MyStepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 
-
-/*
- * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- *          SETUP - COMMS, ACTUATORS, SENSORS
- * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*/
 void setup() {
     Serial.begin(9600);
     while(!Serial){}
@@ -52,17 +40,17 @@ void setup() {
     #endif
 
     delay(100);
-    Serial.println("Start Test");
+    
+    #if POSITION_CTRL
+    Serial.println("Start Position Control Test");
+    #endif
+
+    #if SPEED_CTRL
+    Serial.println("Start Speed Control Test");
+    #endif
 }
 
-/*
- * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
- *                    LOOP FUNCTION
- * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-*/
 void loop() {
-    Serial.println("")
-    
     #if POSITION_CTRL
     for(int i=0; i<5; i++){
         Serial.print("Target Position: "); Serial.println(90*i);
@@ -75,6 +63,7 @@ void loop() {
     #if SPEED_CTRL
     MyStepper.setSpeed(SPIN_DIRECTION * NEMA17_MAX_SPEED / SPEED_REDUCTION);
     MyStepper.runSpeed();
+    speed_dir *= -1; //reverse direction
     #endif
 
 }
