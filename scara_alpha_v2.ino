@@ -185,7 +185,7 @@ Moves the SCARA to a home or zero position. HOME is defined as the all joints at
     J2_Stepper.moveTo( J2_home );
     J3_Stepper.moveTo( J3_home );
 
-    while(J1_Stepper.currentPosition() != J1_home || J2_Stepper.currentPosition() != J2_home || J3_Stepper.currentPosition() != J3_home){
+    while(J1_Stepper.distanceToGo() != 0 || J2_Stepper.distanceToGo() != 0 || J3_Stepper.distanceToGo() != 0){
         J1_Stepper.run();
         J2_Stepper.run();
         J3_Stepper.run();
@@ -195,7 +195,10 @@ Moves the SCARA to a home or zero position. HOME is defined as the all joints at
 }//end of zeroHome()
 
 void moveAxis(AccelStepper joint, int stp, int speed_reduction){
-    int d = 1;
+'''
+Moves a given axis to a specified step position
+'''
+    joint->currentPosition() > stp ? int d = 1 : int d = -1; 
     joint->setSpeed(d * NEMA17_MAX_SPEED / speed_reduction);
     joint->moveTo(stp);
     while(joint->distanceToGo() != 0){
