@@ -4,10 +4,9 @@
 @author: Kensei Suzuki & Diego Gomez
 @brief: Alpha version 2.0 meant for development. Top level main code for controlling the SCARA robot. 
         V2.0 includes a new naming convention as well as modularized and re-usable functions.
-
-        Base --> J1
-        Z-axis --> J2
-        Elbow --> J3
+            J1 --> Base joint
+            J2 --> Z-axis joint
+            J3 --> Arm joint
 */
 
 /*
@@ -25,27 +24,27 @@
 #define MICROSTEP_FACTOR        8         //microstepping - increases steps/rev by factor of {2, 4, 8, 16}
  
 // pins
-const int J1_DIR_PIN        = 12;        //nema stepper motors control pins
+const int J1_DIR_PIN        = 12;       //Revolute joint base NEMA stepper motors control pins
 const int J1_STEP_PIN       = 13;
-const int J2_DIR_PIN           = 8;
-const int J2_STEP_PIN          = 9;
-const int J3_DIR_PIN       = 10;
-const int J3_STEP_PIN      = 11;
-const int J2_MAX_LIMIT_PIN       = 4;        //limit switch 
-const int J2_MIN_LIMIT_PIN       = 3;
-const int J3_MIN_LIMIT_PIN   = 5;
-const int J3_MAX_LIMIT_PIN   = 6;
-const int J1_LIMIT_PIN        = 2;
-const int GRIPPER_PIN           = 7;       //gripper servo motor PWM pin
+const int J2_DIR_PIN        = 8;        //Prismatic joint z-axis NEMA stepper motors control pins
+const int J2_STEP_PIN       = 9;
+const int J3_DIR_PIN        = 10;       //Revolute joint arm NEMA stepper motors control pins
+const int J3_STEP_PIN       = 11;
+const int J2_MAX_LIMIT_PIN  = 4;        //limit switch 
+const int J2_MIN_LIMIT_PIN  = 3;
+const int J3_MIN_LIMIT_PIN  = 5;
+const int J3_MAX_LIMIT_PIN  = 6;
+const int J1_LIMIT_PIN      = 2;
+const int GRIPPER_PIN       = 7;       //gripper servo motor PWM pin
 
 // globals
 int J1_max_step=0, J1_min_step=0, J2_max_step=0, J2_min_step=0, J3_min_step=0, J3_max_step=0;
 int user_inputs[3] = {0,0,0};
 
 //class objects
-AccelStepper J1Stepper(AccelStepper::DRIVER, J1_STEP_PIN, J1_DIR_PIN);
-AccelStepper J2Stepper(AccelStepper::DRIVER, J2_STEP_PIN, J2_DIR_PIN);
-AccelStepper J3Stepper(AccelStepper::DRIVER, J3_STEP_PIN, J3_DIR_PIN);
+AccelStepper J1_Stepper(AccelStepper::DRIVER, J1_STEP_PIN, J1_DIR_PIN);
+AccelStepper J2_Stepper(AccelStepper::DRIVER, J2_STEP_PIN, J2_DIR_PIN);
+AccelStepper J3_Stepper(AccelStepper::DRIVER, J3_STEP_PIN, J3_DIR_PIN);
 Servo GripperServo;
 
 //func protos
@@ -66,21 +65,22 @@ void setup(){
     while(!Serial){}
 
     //init limit switches
+    pinMode(J1_LIMIT_PIN, INPUT_PULLUP);
     pinMode(J2_MAX_LIMIT_PIN, INPUT_PULLUP);
     pinMode(J2_MIN_LIMIT_PIN, INPUT_PULLUP);
     pinMode(J3_MAX_LIMIT_PIN, INPUT_PULLUP);
     pinMode(J3_MIN_LIMIT_PIN, INPUT_PULLUP);
 
     //setup stepper motors
-    J1Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
-    J1Stepper.setAcceleration(NEMA17_MAX_ACCEL);
-    J1Stepper.setSpeed(0);
-    J2Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
-    J2Stepper.setAcceleration(NEMA17_MAX_ACCEL);
-    J2Stepper.setSpeed(0);
-    J3Stepper.setAcceleration(NEMA17_MAX_ACCEL);
-    J3Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
-    J3Stepper.setSpeed(0);
+    J1_Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
+    J1_Stepper.setAcceleration(NEMA17_MAX_ACCEL);
+    J1_Stepper.setSpeed(0);
+    J2_Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
+    J2_Stepper.setAcceleration(NEMA17_MAX_ACCEL);
+    J2_Stepper.setSpeed(0);
+    J3_Stepper.setAcceleration(NEMA17_MAX_ACCEL);
+    J3_Stepper.setMaxSpeed(NEMA17_MAX_SPEED);
+    J3_Stepper.setSpeed(0);
 
     delay(250);
     Serial.println("SCARA is initialized.");
@@ -96,20 +96,20 @@ void setup(){
 */
 void loop(){
     //get user input for each joint 
-    int J1_position = getManualInput("Enter J1 angle (+/- 90deg): ", -90, 90);
+    int J1_position = getManualInput("Enter J1 angle (+/- 170deg): ", -170, 170);
     int J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);
     int J3_position = getManualInput("Enter J3 angle (+/- 148deg): ", -148, 148);
 
     //convert user input into step positions for motors
-    int b_step = calculateStep(J1_position, -90, 90, J1_min_step, J1_max_step);
+    int J1_step = calculateStep(J1_position, -170, 170, J1_min_step, J1_max_step);
     int J2_step = calculateStep(J2_position, 192, 387, J2_min_step, J2_max_step);
-    int e_step = calculateStep(J3_position, -148, 148, J3_min_step, J3_max_step);
+    int J3_step = calculateStep(J3_position, -148, 148, J3_min_step, J3_max_step);
 
-    //run motors to step positions
+    //run motors to step positions individually
     Serial.print("Moving SCARA to position... ");
-    moveAxis(J1Stepper, b_step);
-    moveAxis(J2Stepper, J2_step);
-    moveAxis(J3Stepper, e_step);
+    moveAxis(J1_Stepper, J1_step);
+    moveAxis(J2_Stepper, J2_step);
+    moveAxis(J3_Stepper, J3_step);
     Serial.println("Done");
 
     delay(100);
@@ -123,60 +123,61 @@ void loop(){
 */
 
 void calibrateLimits(){
+'''
+Determines step count for joint limits using hinge limit switches. 
+'''
     Serial.print("Calibrating joint limits ... ");
     
-    // J1Stepper.setSpeed(-1 * NEMA17_MAX_SPEED / 10);
-    // while( digitalRead(J3_MIN_LIMIT_PIN)==LOW ){
-    //     J1Stepper.runSpeed();
-    // }
-    // J1_min_step = J1Stepper.currentPosition();
-
-    // J1Stepper.setSpeed(1 * NEMA17_MAX_SPEED / 10);
-    // while( digitalRead(J3_MAX_LIMIT_PIN)==LOW ){
-    //     J1Stepper.runSpeed();
-    // }
-    // J1_max_step = J1Stepper.currentPosition();
-
-    //top
-    J2Stepper.setSpeed(NEMA17_MAX_SPEED / 3);
-    while( digitalRead(J2_MAX_LIMIT_PIN)==LOW ){
-        J2Stepper.runSpeed();
+    J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
+    while( digitalRead(J1_LIMIT_PIN)==LOW){        //J1 max - base (revolute)
+        J1_Stepper.runSpeed();
     }
-    J2_max_step = J2Stepper.currentPosition();
+    J1_max_step = J1_Stepper.currentPosition();
 
-    //bottom
-    J2Stepper.setSpeed(-1 * NEMA17_MAX_SPEED / 3);
-    while( digitalRead(J2_MIN_LIMIT_PIN)==LOW ){
-        J2Stepper.runSpeed();
+    J1_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+    while( digitalRead(J1_LIMIT_PIN)==LOW ){        //J1 min - base (revolute)
+        J1_Stepper.runSpeed();
     }
-    J2_min_step = J2Stepper.currentPosition();
-        
-    //left
-    J3Stepper.setSpeed(-1 * NEMA17_MAX_SPEED / 15);
-    while( digitalRead(J3_MIN_LIMIT_PIN)==LOW ){
-        J3Stepper.runSpeed();
-    }
-    J3_min_step = J3Stepper.currentPosition();
+    J1_min_step = J1_Stepper.currentPosition();
 
-    //right
-    J3Stepper.setSpeed(1 * NEMA17_MAX_SPEED / 15);
-    while( digitalRead(J3_MAX_LIMIT_PIN)==LOW ){
-        J3Stepper.runSpeed();
+    J2_Stepper.setSpeed(NEMA17_MAX_SPEED);
+    while( digitalRead(J2_MAX_LIMIT_PIN)==LOW ){    //J2 max - z-axis (prismatic)
+        J2_Stepper.runSpeed();
     }
-    J3_max_step = J3Stepper.currentPosition();
+    J2_max_step = J2_Stepper.currentPosition();
+
+    J2_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+    while( digitalRead(J2_MIN_LIMIT_PIN)==LOW ){    //J2 min - z-axis (prismatic)
+        J2_Stepper.runSpeed();
+    }
+    J2_min_step = J2_Stepper.currentPosition();
+    
+    J3_Stepper.setSpeed(NEMA17_MAX_SPEED);
+    while( digitalRead(J3_MAX_LIMIT_PIN)==LOW ){    //J3 max - arm (revolute)
+        J3_Stepper.runSpeed();
+    }
+    J3_max_step = J3_Stepper.currentPosition();
+
+    J2_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+    while( digitalRead(J3_MIN_LIMIT_PIN)==LOW ){    //J3 min - arm (revolute)
+        J3_Stepper.runSpeed();
+    }
+    J3_min_step = J3_Stepper.currentPosition();
 
     Serial.println("Done.");
-
 } //end of calibrateLimits()
 
 void zeroHome(){
     //move to center positions
-    J2Stepper.moveTo( floor(average(J2_max_step, J2_min_step)) );
-    J2Stepper.setSpeed(NEMA17_MAX_SPEED/3);
-    J2Stepper.run();
-    J3Stepper.moveTo( floor(average(J3_max_step, J3_min_step)) );
-    J3Stepper.setSpeed(NEMA17_MAX_SPEED/15);
-    J3Stepper.run();
+    J1_Stepper.moveTo( floor(average(J1_max_step, J1_min_step)) );
+    J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
+    J1_Stepper.run();
+    J2_Stepper.moveTo( floor(average(J2_max_step, J2_min_step)) );
+    J2_Stepper.setSpeed(NEMA17_MAX_SPEED/3);
+    J2_Stepper.run();
+    J3_Stepper.moveTo( floor(average(J3_max_step, J3_min_step)) );
+    J3_Stepper.setSpeed(NEMA17_MAX_SPEED/15);
+    J3_Stepper.run();
 } //end of zeroHome()
 
 void moveAxis(AccelStepper joint, int stp, int speed_reduction){
@@ -186,7 +187,7 @@ void moveAxis(AccelStepper joint, int stp, int speed_reduction){
     while(joint->distanceToGo() != 0){
         joint->run();
     }
-}
+} //end of moveAxis()
 
 int getManualInput(const char *prompt, int minVal, int maxVal){
     int input;
@@ -201,8 +202,8 @@ int getManualInput(const char *prompt, int minVal, int maxVal){
     } while( input < minVal || input > maxVal);
     
     return input; 
-}
+} //end of getManualInput();
 
 int calculateStep(int input, int minInput, int maxInput, int minStep, int maxStep){
     return map(input, minInput, maxInput, minStep, maxStep); 
-}
+} //end of calculateStep()
