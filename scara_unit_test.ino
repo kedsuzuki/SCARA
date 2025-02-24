@@ -13,9 +13,9 @@ Modify boolean definitions (0 or 1) to change which test to run.
  * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 */
 
-#define TEST_STEPPER      1       //moves one stepper using pins 7 and 8. Rotates left and right.
+#define TEST_STEPPER      0       //moves one stepper using pins 7 and 8. Rotates left and right.
 #define TEST_SERVO        0
-#define TEST_LIMITSWITCH  0
+#define TEST_LIMITSWITCH  1
 
 #include <AccelStepper.h>
 #include <Servo.h>
