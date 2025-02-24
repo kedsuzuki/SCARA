@@ -168,17 +168,31 @@ Determines step count for joint limits using hinge limit switches.
 } //end of calibrateLimits()
 
 void zeroHome(){
-    //move to center positions
-    J1_Stepper.moveTo( floor(average(J1_max_step, J1_min_step)) );
+'''
+Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
+'''
+
+    Serial.print("Moving to HOME position.....");
+    int J1_home = floor(average(J1_max_step, J1_min_step));
+    int J2_home = floor(average(J2_max_step, J2_min_step));
+    int J3_home = floor(average(J3_max_step, J3_min_step));
+    
     J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
-    J1_Stepper.run();
-    J2_Stepper.moveTo( floor(average(J2_max_step, J2_min_step)) );
-    J2_Stepper.setSpeed(NEMA17_MAX_SPEED/3);
-    J2_Stepper.run();
-    J3_Stepper.moveTo( floor(average(J3_max_step, J3_min_step)) );
-    J3_Stepper.setSpeed(NEMA17_MAX_SPEED/15);
-    J3_Stepper.run();
-} //end of zeroHome()
+    J2_Stepper.setSpeed(NEMA17_MAX_SPEED);
+    J3_Stepper.setSpeed(NEMA17_MAX_SPEED);
+
+    J1_Stepper.moveTo( J1_home );
+    J2_Stepper.moveTo( J2_home );
+    J3_Stepper.moveTo( J3_home );
+
+    while(J1_Stepper.currentPosition() != J1_home || J2_Stepper.currentPosition() != J2_home || J3_Stepper.currentPosition() != J3_home){
+        J1_Stepper.run();
+        J2_Stepper.run();
+        J3_Stepper.run();
+    }
+
+    Serial.println("Done")
+}//end of zeroHome()
 
 void moveAxis(AccelStepper joint, int stp, int speed_reduction){
     int d = 1;
