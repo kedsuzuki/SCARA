@@ -159,7 +159,7 @@ Determines step count for joint limits using hinge limit switches.
     }
     J3_max_step = J3_Stepper.currentPosition();
 
-    J2_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+    J3_Stepper.setSpeed(-NEMA17_MAX_SPEED);
     while( digitalRead(J3_MIN_LIMIT_PIN)==LOW ){    //J3 min - arm (revolute)
         J3_Stepper.runSpeed();
     }
@@ -225,3 +225,5 @@ int getManualInput(const char *prompt, int minVal, int maxVal){
 int calculateStep(int input, int minInput, int maxInput, int minStep, int maxStep){
     return map(input, minInput, maxInput, minStep, maxStep); 
 } //end of calculateStep()
+
+//can you see this?
