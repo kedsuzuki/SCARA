@@ -107,6 +107,11 @@ void loop(){
     int J3_step = calculateStep(J3_position, -148, 148, J3_min_step, J3_max_step);
 
     //run motors to step positions individually
+    Serial.print("Moving SCARA to position... ");
+    moveAxis(J1_Stepper, J1_step);
+    moveAxis(J2_Stepper, J2_step);
+    moveAxis(J3_Stepper, J3_step);
+    Serial.println("Done");
 
     delay(100);
 } //end of loop()
@@ -119,9 +124,9 @@ void loop(){
 */
 
 void calibrateLimits(){
-
-// Determines step count for joint limits using hinge limit switches. 
-
+'''
+Determines step count for joint limits using hinge limit switches. 
+'''
     Serial.print("Calibrating joint limits ... ");
     
     J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
@@ -164,9 +169,9 @@ void calibrateLimits(){
 } //end of calibrateLimits()
 
 void zeroHome(){
-
-// Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
-
+'''
+Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
+'''
 
     Serial.print("Moving to HOME position.....");
     int J1_home = floor(average(J1_max_step, J1_min_step));
@@ -187,20 +192,19 @@ void zeroHome(){
         J3_Stepper.run();
     }
 
-    Serial.println("Done");
+    Serial.println("Done")
 }//end of zeroHome()
 
 void moveAxis(AccelStepper joint, int stp, int speed_reduction){
-
-// Moves a given axis to a specified step position
-
-    joint->currentPosition() > stp ? int d = 1 : int d = -1; 
-    joint->setSpeed(d * NEMA17_MAX_SPEED / speed_reduction);
-    joint->moveTo(stp);
-    while(joint->distanceToGo() != 0){
-        joint->run();
+    int d=1;
+    joint.currentPosition() > stp ? d = 1 : d = -1; 
+    joint.setSpeed(d * NEMA17_MAX_SPEED / speed_reduction);
+    joint.moveTo(stp);
+    while(joint.distanceToGo() != 0){
+        Serial.println("moving?");
+        joint.run();
     }
-} //end of moveAxis()
+}//end of moveAxis()
 
 int getManualInput(const char *prompt, int minVal, int maxVal){
     int input;
