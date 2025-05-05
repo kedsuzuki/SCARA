@@ -70,63 +70,9 @@ void loop() {
   int X_pos = getManualInput("Enter desired position of Robot in the x-direction (+/- 222mm): ", -range, range);
   delay(1000);
   int Y_pos = getManualInput("Enter desired position of Robot in the y-direction (+/- 222mm): ", -range, range);
+  inv_kin(X_pos, Y_pos);
 
-  theta2 = acos((pow(X_pos, 2) + pow(Y_pos, 2) - pow(L1, 2) - pow(L2, 2)) / (2 * L1 * L2));
-  // Need to include that if theta2 is greater than limits of L2, to return to Manual Input function
-
-  // First Quadrant
-  // float theta1 = 90 - (atan2(Y_pos, X_pos) - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2)))) * 180/PI;
-  if (X_pos > 0 && Y_pos > 0) {
-    Serial.println("Running 1st Option");
-    theta1 = PI / 2 + (atan2(Y_pos, X_pos) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
-    theta2 = -theta2;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
-    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
-    Serial.println(theta1 * (180 / PI));
-    Serial.println(theta2 * (180 / PI));
-    Serial.println(Xd);
-    Serial.println(Yd);
-  }
-
-  // 2nd Quadrant (if X_pos <= 0 && Y_pos >= 0)
-  // float theta1 = (atan2(Y_pos, X_pos)*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI);
-  if (X_pos <= 0 && Y_pos >= 0) {
-    Serial.println("Running 2nd Option");
-    float theta1 = atan2(Y_pos, X_pos) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
-
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
-    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
-    Serial.println(theta1 * (180 / PI));
-    Serial.println(theta2 * (180 / PI));
-    Serial.println(Xd);
-    Serial.println(Yd);
-  }
-
-  // 3rd Quadrant (if X_pos <= 0 && Y_pos <= 0)
-  // float theta1 = (atan2(Y_pos, X_pos) * 180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360 ;
-  if (X_pos <= 0 && Y_pos < 0) {
-    Serial.println("Running 3rd Option");
-    theta1 = atan2(Y_pos, X_pos) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
-    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
-    Serial.println(theta1 * (180 / PI));
-    Serial.println(theta2 * (180 / PI));
-    Serial.println(Xd);
-    Serial.println(Yd);
-  }
-
-  // 4th Quadrant
-  // float theta1 = (atan2(Y_pos, X_pos)*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360;
-  if (X_pos > 0 && Y_pos <= 0) {
-    Serial.println("Running 4th Option");
-    theta1 = atan2(Y_pos, X_pos) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
-    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
-    Serial.println(theta1 * (180 / PI));
-    Serial.println(theta2 * (180 / PI));
-    Serial.println(Xd);
-    Serial.println(Yd);
-  }
+  
 }
 
 int getManualInput(const char *prompt, int minVal, int maxVal) {
@@ -148,8 +94,69 @@ int calculateStep(int input, int minInput, int maxInput, int minStep, int maxSte
   return map(input, minInput, maxInput, minStep, maxStep);
 }  //end of calculateStep()
 
+void inv_kin(int x,int y)
+{
+  theta2 = acos((pow(x, 2) + pow(y, 2) - pow(L1, 2) - pow(L2, 2)) / (2 * L1 * L2));
+  // Need to include that if theta2 is greater than limits of L2, to return to Manual Input function
 
-/* theta1 = PI / 2 - (atan2(Y_pos, X_pos) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+  // First Quadrant
+  // float theta1 = 90 - (atan2(y,(x)) - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2)))) * 180/PI;
+  if (x > 0 && y > 0) {
+    Serial.println("Running 1st Option");
+    theta1 = PI / 2 + (atan2(y,(x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+    theta2 = -theta2;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 2nd Quadrant (if(x) <= 0 && y >= 0)
+  // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI);
+  if (x <= 0 && y >= 0) {
+    Serial.println("Running 2nd Option");
+    float theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 3rd Quadrant (if(x) <= 0 && y <= 0)
+  // float theta1 = (atan2(y,(x)) * 180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360 ;
+  if (x <= 0 && y < 0) {
+    Serial.println("Running 3rd Option");
+    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 4th Quadrant
+  // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360;
+  if (x > 0 && y <= 0) {
+    Serial.println("Running 4th Option");
+    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+}
+
+
+
+/* theta1 = PI / 2 - (atan2(y,(x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
     theta2 = -theta2;
     Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
@@ -158,10 +165,10 @@ int calculateStep(int input, int minInput, int maxInput, int minStep, int maxSte
 
     Serial.println(Xd);
     Serial.println(Yd);
-    if (X_pos != Xd || Y_pos != Yd) {
+    if (x) != Xd || y != Yd) {
       Serial.println('A');
       theta2 = -theta2;
-      theta1 = PI / 2 + (atan2(Y_pos, X_pos) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+      theta1 = PI / 2 + (atan2(y,(x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
       theta2 = -theta2;
       Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
       Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
@@ -172,4 +179,62 @@ int calculateStep(int input, int minInput, int maxInput, int minStep, int maxSte
     } else {
       Serial.println("You have arrived at your desired position");
     }
+
+
+    theta2 = acos((pow(x), 2) + pow(y, 2) - pow(L1, 2) - pow(L2, 2)) / (2 * L1 * L2));
+  // Need to include that if theta2 is greater than limits of L2, to return to Manual Input function
+
+  // First Quadrant
+  // float theta1 = 90 - (atan2(y,(x)) - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2)))) * 180/PI;
+  if (x > 0 && y > 0) {
+    Serial.println("Running 1st Option");
+    theta1 = PI / 2 + (atan2(y,(x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+    theta2 = -theta2;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 2nd Quadrant (if(x) <= 0 && y >= 0)
+  // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI);
+  if (x) <= 0 && y >= 0) {
+    Serial.println("Running 2nd Option");
+    float theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 3rd Quadrant (if(x) <= 0 && y <= 0)
+  // float theta1 = (atan2(y,(x)) * 180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360 ;
+  if (x) <= 0 && y < 0) {
+    Serial.println("Running 3rd Option");
+    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
+
+  // 4th Quadrant
+  // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360;
+  if (x) > 0 && y <= 0) {
+    Serial.println("Running 4th Option");
+    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
+    Serial.println(theta1 * (180 / PI));
+    Serial.println(theta2 * (180 / PI));
+    Serial.println(Xd);
+    Serial.println(Yd);
+  }
     */
