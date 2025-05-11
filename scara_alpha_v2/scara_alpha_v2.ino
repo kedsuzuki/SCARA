@@ -107,11 +107,11 @@ void loop(){
     int J3_step = calculateStep(J3_position, -148, 148, J3_min_step, J3_max_step);
 
     //run motors to step positions individually
-    Serial.print("Moving SCARA to position... ");
+    /* Serial.print("Moving SCARA to position... ");
     moveAxis(J1_Stepper, J1_step);
     moveAxis(J2_Stepper, J2_step);
     moveAxis(J3_Stepper, J3_step);
-    Serial.println("Done");
+    Serial.println("Done"); */
 
     delay(100);
 } //end of loop()
@@ -124,9 +124,9 @@ void loop(){
 */
 
 void calibrateLimits(){
-'''
-Determines step count for joint limits using hinge limit switches. 
-'''
+
+// Determines step count for joint limits using hinge limit switches. 
+
     Serial.print("Calibrating joint limits ... ");
     
     J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
@@ -169,14 +169,14 @@ Determines step count for joint limits using hinge limit switches.
 } //end of calibrateLimits()
 
 void zeroHome(){
-'''
-Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
-'''
+
+// Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
+
 
     Serial.print("Moving to HOME position.....");
-    int J1_home = floor(average(J1_max_step, J1_min_step));
-    int J2_home = floor(average(J2_max_step, J2_min_step));
-    int J3_home = floor(average(J3_max_step, J3_min_step));
+    int J1_home = floor((abs(J1_max_step) + abs(J1_min_step))/2);
+    int J2_home = floor((abs(J2_max_step) + abs(J2_min_step))/2);
+    int J3_home = floor((abs(J3_max_step) + abs(J3_min_step))/2);
     
     J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
     J2_Stepper.setSpeed(NEMA17_MAX_SPEED);
@@ -192,7 +192,7 @@ Moves the SCARA to a home or zero position. HOME is defined as the all joints at
         J3_Stepper.run();
     }
 
-    Serial.println("Done")
+    Serial.println("Done");
 }//end of zeroHome()
 
 void moveAxis(AccelStepper joint, int stp, int speed_reduction){

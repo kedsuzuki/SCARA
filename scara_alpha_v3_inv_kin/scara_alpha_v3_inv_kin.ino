@@ -67,19 +67,110 @@ void setup() {
 }
 
 void loop() {
-  int X_pos = getManualInput("Enter desired position of Robot in the x-direction (+/- 222mm): ", -range, range);
+  int X_pos = getManualInput("Enter desired position of Robot in the x-direction (+/- 222mm): ", -range, range);  // Calls user to enter position of Robot in x-direction
   delay(1000);
-  int Y_pos = getManualInput("Enter desired position of Robot in the y-direction (+/- 222mm): ", -range, range);
-  inv_kin(X_pos, Y_pos);
-
-  
+  int Y_pos = getManualInput("Enter desired position of Robot in the y-direction (+/- 222mm): ", -range, range);  // Calls user to enter position of Robot in y-direction
+  inv_kin(X_pos, Y_pos);                                                                                          // calls function to calculate angles required to reach desired position
+  int J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);                             // asks user to enter desired height of robot in z-dir3ection
+  int J1_step = calculateStep(theta1, -170, 170, J1_min_step, J1_max_step);                                       // calculates steps needed to get to desired angles
+  int J2_step = calculateStep(J2_position, 192, 387, J2_min_step, J2_max_step);
+  int J3_step = calculateStep(theta2, -125, 125, J3_min_step, J3_max_step);
 }
+
+/*
+ * vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+ *                USER-DEFINED FUNCTIONS
+ * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*/
+
+void calibrateLimits() {
+
+  // Determines step count for joint limits using hinge limit switches.
+
+  Serial.print("Calibrating joint limits ... ");
+
+  J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
+  while (digitalRead(J1_LIMIT_PIN) == LOW) {  //J1 max - base (revolute)
+    J1_Stepper.runSpeed();
+  }
+  J1_max_step = J1_Stepper.currentPosition();
+
+  J1_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+  while (digitalRead(J1_LIMIT_PIN) == LOW) {  //J1 min - base (revolute)
+    J1_Stepper.runSpeed();
+  }
+  J1_min_step = J1_Stepper.currentPosition();
+
+  J2_Stepper.setSpeed(NEMA17_MAX_SPEED);
+  while (digitalRead(J2_MAX_LIMIT_PIN) == LOW) {  //J2 max - z-axis (prismatic)
+    J2_Stepper.runSpeed();
+  }
+  J2_max_step = J2_Stepper.currentPosition();
+
+  J2_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+  while (digitalRead(J2_MIN_LIMIT_PIN) == LOW) {  //J2 min - z-axis (prismatic)
+    J2_Stepper.runSpeed();
+  }
+  J2_min_step = J2_Stepper.currentPosition();
+
+  J3_Stepper.setSpeed(NEMA17_MAX_SPEED);
+  while (digitalRead(J3_MAX_LIMIT_PIN) == LOW) {  //J3 max - arm (revolute)
+    J3_Stepper.runSpeed();
+  }
+  J3_max_step = J3_Stepper.currentPosition();
+
+  J3_Stepper.setSpeed(-NEMA17_MAX_SPEED);
+  while (digitalRead(J3_MIN_LIMIT_PIN) == LOW) {  //J3 min - arm (revolute)
+    J3_Stepper.runSpeed();
+  }
+  J3_min_step = J3_Stepper.currentPosition();
+
+  Serial.println("Done.");
+}  //end of calibrateLimits()
+
+void zeroHome() {
+
+  // Moves the SCARA to a home or zero position. HOME is defined as the all joints at a middle position away from any self-collisions.
+
+
+  Serial.print("Moving to HOME position.....");
+  int J1_home = floor((abs(J1_max_step) + abs(J1_min_step)) / 2);
+  int J2_home = floor((abs(J2_max_step) + abs(J2_min_step)) / 2);
+  int J3_home = floor((abs(J3_max_step) + abs(J3_min_step)) / 2);
+
+  J1_Stepper.setSpeed(NEMA17_MAX_SPEED);
+  J2_Stepper.setSpeed(NEMA17_MAX_SPEED);
+  J3_Stepper.setSpeed(NEMA17_MAX_SPEED);
+
+  J1_Stepper.moveTo(J1_home);
+  J2_Stepper.moveTo(J2_home);
+  J3_Stepper.moveTo(J3_home);
+
+  while (J1_Stepper.distanceToGo() != 0 || J2_Stepper.distanceToGo() != 0 || J3_Stepper.distanceToGo() != 0) {
+    J1_Stepper.run();
+    J2_Stepper.run();
+    J3_Stepper.run();
+  }
+
+  Serial.println("Done");
+}  //end of zeroHome()
+
+void moveAxis(AccelStepper joint, int stp, int speed_reduction) {
+  int d = 1;
+  joint.currentPosition() > stp ? d = 1 : d = -1;
+  joint.setSpeed(d * NEMA17_MAX_SPEED / speed_reduction);
+  joint.moveTo(stp);
+  while (joint.distanceToGo() != 0) {
+    Serial.println("moving?");
+    joint.run();
+  }
+}  //end of moveAxis()
 
 int getManualInput(const char *prompt, int minVal, int maxVal) {
   int input;
 
   do {
-    Serial.println(prompt);
+    Serial.print(prompt);
     while (!Serial.available()) {}
     input = Serial.parseInt();
     if (input < minVal || input > maxVal) {
@@ -94,63 +185,66 @@ int calculateStep(int input, int minInput, int maxInput, int minStep, int maxSte
   return map(input, minInput, maxInput, minStep, maxStep);
 }  //end of calculateStep()
 
-void inv_kin(int x,int y)
-{
-  theta2 = acos((pow(x, 2) + pow(y, 2) - pow(L1, 2) - pow(L2, 2)) / (2 * L1 * L2));
+void inv_kin(int x, int y) {
+  theta2 = acos((pow(x, 2) + pow(y, 2) - pow(L1, 2) - pow(L2, 2)) / (2 * L1 * L2));  // calculates theta2 using trig functions
   // Need to include that if theta2 is greater than limits of L2, to return to Manual Input function
 
+  // Depending on quadrant where desired robot location is located, inverse kineamtics function adjusts theta1 & theta2
   // First Quadrant
-  // float theta1 = 90 - (atan2(y,(x)) - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2)))) * 180/PI;
   if (x > 0 && y > 0) {
     Serial.println("Running 1st Option");
-    theta1 = PI / 2 + (atan2(y,(x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+    theta1 = PI / 2 + (atan2(y, (x)) - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
     theta2 = -theta2;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    /* Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
     Serial.println(theta1 * (180 / PI));
     Serial.println(theta2 * (180 / PI));
     Serial.println(Xd);
-    Serial.println(Yd);
+    Serial.println(Yd); */
   }
 
   // 2nd Quadrant (if(x) <= 0 && y >= 0)
   // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI);
   if (x <= 0 && y >= 0) {
     Serial.println("Running 2nd Option");
-    float theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
+    float theta1 = atan2(y, (x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2))));
 
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    /* Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
     Serial.println(theta1 * (180 / PI));
     Serial.println(theta2 * (180 / PI));
     Serial.println(Xd);
-    Serial.println(Yd);
+    Serial.println(Yd); */
   }
 
   // 3rd Quadrant (if(x) <= 0 && y <= 0)
   // float theta1 = (atan2(y,(x)) * 180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360 ;
   if (x <= 0 && y < 0) {
     Serial.println("Running 3rd Option");
-    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    theta1 = atan2(y, (x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    /* Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
     Serial.println(theta1 * (180 / PI));
     Serial.println(theta2 * (180 / PI));
     Serial.println(Xd);
-    Serial.println(Yd);
+    Serial.println(Yd); */
   }
 
   // 4th Quadrant
   // float theta1 = (atan2(y,(x))*180/PI) - (90 - atan2((L1 + L2*(cos(theta2))), L2*(sin(theta2))) * 180/PI) + 360;
   if (x > 0 && y <= 0) {
     Serial.println("Running 4th Option");
-    theta1 = atan2(y,(x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
-    Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
+    theta1 = atan2(y, (x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
+    /* Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
     Serial.println(theta1 * (180 / PI));
     Serial.println(theta2 * (180 / PI));
     Serial.println(Xd);
-    Serial.println(Yd);
+    Serial.println(Yd); */
+  }
+
+  if (abs(theta2) > 125) {
+    Serial.println("No Solution Exists");
   }
 }
 
