@@ -100,11 +100,11 @@ void setup() {
 void loop() {
   theta1 = getManualInput("Enter desired J1 angle: ", -360, 360);
   delay(2500);
+  float J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);
+  delay(2500);
   theta2 = getManualInput("Enter desired J2 angle: ", -125, 125);
   forw_kin(theta1, theta2);
-  delay(2500);
-  
-  int J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);
+
   int J1_step = calculateStep(theta1, -170, 170, J1_min_step, J1_max_step);  // calculates steps needed to get to desired angles
   int J2_step = calculateStep(J2_position, 192, 387, J2_min_step, J2_max_step);
   int J3_step = calculateStep(theta2, -125, 125, J3_min_step, J3_max_step);
@@ -116,7 +116,6 @@ void loop() {
   Serial.print(", ");
   Serial.print(J2_position);
   Serial.println();
-
 }
 
 /*
@@ -227,7 +226,7 @@ int calculateStep(int input, int minInput, int maxInput, int minStep, int maxSte
   return map(input, minInput, maxInput, minStep, maxStep);
 }  //end of calculateStep()
 
-void forw_kin(int t1, int t2) {
+void forw_kin(float t1, float t2) {
   Xd = round(L1 * (cos(t1)) + L2 * cos(t1 + t2));
   Yd = round(L1 * (sin(t1)) + L2 * sin(t1 + t2));
 }
