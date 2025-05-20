@@ -106,29 +106,33 @@ void setup() {
  * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 */
 void loop() {
-  nosol = false;   
-  Serial.println(nosol);                                                                                      // Set boolean flag for theta2 check
+  nosol = false; // resetting flag
+  // Serial.println(nosol);                                                                                          // Set boolean flag for theta2 check
   int X_pos = getManualInput("Enter desired position of Robot in the x-direction (+/- 222mm): ", -range, range);  // Calls user to enter position of Robot in x-direction
   delay(1000);
   int Y_pos = getManualInput("Enter desired position of Robot in the y-direction (+/- 222mm): ", -range, range);  // Calls user to enter position of Robot in y-direction
-  inv_kin(X_pos, Y_pos); // calls function to calculate angles required to reach desired position
-  Serial.println(nosol);  
+  inv_kin(X_pos, Y_pos);                                                                                          // calls function to calculate angles required to reach desired position
+  // Serial.println(nosol);
 
-  if (nosol == true) {
+  if (nosol == true) { // if flag goes off, then program will output there is no solution available
     Serial.println("Sorry! No Solution Exists to Get to Desired Position");
     loop();
   }
 
   else {
     int J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);  // asks user to enter desired height of robot in z-dir3ection
-    Serial.println(theta1 * (180 / PI));
-    Serial.println(theta2 * (180 / PI));
+    // Serial.println(theta1 * (180 / PI));
+    // Serial.println(theta2 * (180 / PI));
     Xd = round(L1 * (cos(theta1)) + L2 * cos(theta1 + theta2));
     Yd = round(L1 * (sin(theta1)) + L2 * sin(theta1 + theta2));
     int J1_step = calculateStep(theta1, -360, 360, J1_min_step, J1_max_step);  // calculates steps needed to get to desired angles
     int J2_step = calculateStep(J2_position, 192, 387, J2_min_step, J2_max_step);
     int J3_step = calculateStep(theta2, -125, 125, J3_min_step, J3_max_step);
     Serial.print("Moving SCARA to position... ");
+    moveAxis(J1_Stepper, J1_step, 1);
+    moveAxis(J2_Stepper, J2_step, 1);
+    moveAxis(J3_Stepper, J3_step, 1);
+    Serial.println("Done");
     Serial.println("You should now be at: ");
     Serial.print(Xd);
     Serial.print(", ");
@@ -136,10 +140,6 @@ void loop() {
     Serial.print(", ");
     Serial.print(J2_position);
     Serial.println();
-    moveAxis(J1_Stepper, J1_step, 1);
-    moveAxis(J2_Stepper, J2_step, 1);
-    moveAxis(J3_Stepper, J3_step, 1);
-    Serial.println("Done");
   }
 }
 
@@ -285,8 +285,8 @@ void inv_kin(int x, int y) {
     theta1 = atan2(y, (x)) - (PI / 2 - atan2((L1 + L2 * (cos(theta2))), L2 * (sin(theta2)))) + 2 * PI;
   }
 
-  if (abs(theta2 * (180 / PI)) > 120) {
-    nosol = true;
+  if (abs(theta2 * (180 / PI)) > 125) { // flag that checks that theta 2 (angle of L2) is less than the allowable limit set by switch
+    nosol = true; // if it is greater than, it will set the flag off
   }
 }
 

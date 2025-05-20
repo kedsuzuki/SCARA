@@ -100,22 +100,29 @@ void setup() {
 void loop() {
   theta1 = getManualInput("Enter desired J1 angle: ", -360, 360);
   delay(2500);
+  theta2 = getManualInput("Enter desired J2 angle: ", -125, 125);
+  delay(2500);
   float J2_position = getManualInput("Enter z-axis height (192mm, 387mm): ", 192, 387);
   delay(2500);
-  theta2 = getManualInput("Enter desired J2 angle: ", -125, 125);
+  
   forw_kin(theta1, theta2);
 
   int J1_step = calculateStep(theta1, -170, 170, J1_min_step, J1_max_step);  // calculates steps needed to get to desired angles
   int J2_step = calculateStep(J2_position, 192, 387, J2_min_step, J2_max_step);
   int J3_step = calculateStep(theta2, -125, 125, J3_min_step, J3_max_step);
-
-  Serial.print("You should now be at: ");
-  Serial.print(Xd);
-  Serial.print(", ");
-  Serial.print(Yd);
-  Serial.print(", ");
-  Serial.print(J2_position);
-  Serial.println();
+    Serial.print("Moving SCARA to position... ");
+    moveAxis(J1_Stepper, J1_step, 1);
+    moveAxis(J2_Stepper, J2_step, 1);
+    moveAxis(J3_Stepper, J3_step, 1);
+    Serial.println("Done");
+    Serial.println("You should now be at: ");
+    Serial.print(Xd);
+    Serial.print(", ");
+    Serial.print(Yd);
+    Serial.print(", ");
+    Serial.print(J2_position);
+    Serial.println();
+  
 }
 
 /*
